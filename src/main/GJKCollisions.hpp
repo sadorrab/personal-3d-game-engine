@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 class GJKCollider {
     private:
@@ -20,4 +21,23 @@ class GJKCollider {
          */
         glm::vec3* GJKSupport(glm::vec3 direction);
 };
+
+class Simplex {
+    private:
+        glm::vec3 vertices[3];
+        short size;
+        short head;
+    public:
+        /* constructor */
+        Simplex();
+        /* returns the vector in the direction which is most likely to enclose the origin */
+        glm::vec3* simplexNormal();
+        void addVertex(glm::vec3 vertex);
+        bool containsOrigin();
+        bool hasVertex(glm::vec3 vertex);
+};
+
+enum CollisionStatus {HIT, MISS, UNKNOWN};
+
+bool isColliding(GJKCollider collider1, glm::vec3 collider1Position, GJKCollider collider2, glm::vec3 collider2Position);
 #endif
