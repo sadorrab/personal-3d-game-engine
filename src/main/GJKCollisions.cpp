@@ -13,20 +13,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "GJKCollisions.hpp"
 
-/* methods for GJKCollider */
-GJKCollider::GJKCollider(std::vector<glm::vec3> vertices, glm::vec3 origin) {
-    this->vertices = vertices;
-    this->origin = origin;
-}
-
-glm::vec3* GJKCollider::GJKSupport(glm::vec3 direction) {
-    glm::vec3* vertex = &this->vertices[0]; //assign default return value
+glm::vec3* GJKSupport(std::vector<glm::vec3>* vertices, glm::vec3 direction) {
+    glm::vec3* vertex = &(*vertices)[0]; //assign default return value
     float maxDotProduct = 0;
     //search for most extreme vertex
-    for (int i = 0; i<this->vertices.size(); i++) {
-        float dotProduct = dot(glm::normalize(this->vertices[i] - origin), glm::normalize(direction));
+    for (int i = 0; i<vertices->size(); i++) {
+        float dotProduct = dot(glm::normalize((*vertices)[i]), glm::normalize(direction));
         if (dotProduct >= maxDotProduct) {
-            vertex = &this->vertices[i];
+            vertex = &(*vertices)[i];
             maxDotProduct = dotProduct;
         }
     }
@@ -39,7 +33,7 @@ Simplex::Simplex() {
     head = 0;
 }
 
-glm::vec3* lineSegmentNormal(glm::vec3 v1, glm::vec3 v2) {
+glm::vec3 lineSegmentNormal(glm::vec3 v1, glm::vec3 v2) {
     const glm::mat3 CLOCK_ROTATION(
         glm::vec3(0,1,0),
         glm::vec3(-1,0,0),
@@ -48,20 +42,19 @@ glm::vec3* lineSegmentNormal(glm::vec3 v1, glm::vec3 v2) {
         glm::vec3(0,-1,0),
         glm::vec3(1,0,0),
         glm::vec3(0,0,0));
-    glm::vec3* normal = new glm::vec3();
-    *normal = CLOCK_ROTATION * (v2 - v1);
-    if (glm::dot(-1.0f*(v1+v2),*normal) < 0) {
-        *normal = COUNTER_CLOCK_ROTATION * (v2 - v1);
+    glm::vec3 normal = CLOCK_ROTATION * (v2 - v1);
+    if (glm::dot(-1.0f*(v1+v2),normal) < 0) {
+        normal = COUNTER_CLOCK_ROTATION * (v2 - v1);
     }
     return normal;
 }
 
-glm::vec3* Simplex::simplexNormal() {
-    glm::vec3* normal = new glm::vec3();
+glm::vec3 Simplex::simplexNormal() {
+    glm::vec3 normal;
     if (this->size == 0) {
-        *normal = glm::vec3(1,0,0);
+        normal = glm::vec3(1,0,0);
     } else if (this->size == 1) {
-        *normal = -1.0f * this->vertices[0];
+        normal = -1.0f * this->vertices[0];
     } else if (this->size == 2) {
         normal = lineSegmentNormal(this->vertices[0], this->vertices[1]);
     } else {
@@ -91,9 +84,8 @@ bool Simplex::containsOrigin() {
     }
     //check if origin and 3rd point are on the same direction
     for (int i=0; i<3; i++) {
-        glm::vec3* normal;
-        normal = lineSegmentNormal(vertices[i], vertices[(i+1)%3]);
-        if (glm::dot(*normal, vertices[(i+2)%3]) < 0) {
+        glm::vec3 normal = lineSegmentNormal(vertices[i], vertices[(i+1)%3]);
+        if (glm::dot(normal, vertices[(i+2)%3]) < 0) {
             return false;
         }
     }
@@ -110,14 +102,14 @@ bool Simplex::hasVertex(glm::vec3 vertex) {
     return false;
 }
 
-/*Miscelanious functions*/
-bool isColliding(GJKCollider collider1, glm::vec3 collider1Position, GJKCollider collider2, glm::vec3 collider2Position) {
+bool isColliding(std::vector<glm::vec3>* collider1, std::vector<glm::vec3>* collider2) {
     Simplex simplex;
     CollisionStatus status = CollisionStatus::UNKNOWN;
     while (status == CollisionStatus::UNKNOWN) {
-        glm::vec3* targetDirection = simplex.simplexNormal();
-        glm::vec3 minkowskiDifference = (collider1Position + *collider1.GJKSupport(*targetDirection)) - (collider2Position + *collider2.GJKSupport(-1.0f * (*targetDirection)));
-        bool minkowskiPointOnSide = glm::dot(minkowskiDifference, *targetDirection) >= 0;
+        //get new direction to test
+        glm::vec3 targetDirection = simplex.simplexNormal();
+        glm::vec3 minkowskiDifference = *GJKSupport(collider1, targetDirection) - *GJKSupport(collider2, -1.0f * targetDirection);
+        bool minkowskiPointOnSide = glm::dot(minkowskiDifference, targetDirection) >= 0;
         if ((!minkowskiPointOnSide) || simplex.hasVertex(minkowskiDifference)) {
             //miss when repeat vertex or new vertex is not on side of direction
             status = CollisionStatus::MISS;
