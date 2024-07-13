@@ -7,6 +7,7 @@
  * GJK Algorithm
  */
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h> //containsorigin
 #include <vector>
 #include <glm/glm.hpp>
@@ -14,11 +15,17 @@
 #include "GJKCollisions.hpp"
 
 glm::vec3* GJKSupport(std::vector<glm::vec3>* vertices, glm::vec3 direction) {
+    glm::vec3 centerOfMass(0,0,0);
+    for (glm::vec3 v : *vertices) {
+        centerOfMass += v;
+    }
+    centerOfMass = (1 / (float) (*vertices).size()) * centerOfMass;
+
     glm::vec3* vertex = &(*vertices)[0]; //assign default return value
     float maxDotProduct = 0;
     //search for most extreme vertex
     for (int i = 0; i<vertices->size(); i++) {
-        float dotProduct = dot(glm::normalize((*vertices)[i]), glm::normalize(direction));
+        float dotProduct = dot(glm::normalize((*vertices)[i] - centerOfMass), glm::normalize(direction));
         if (dotProduct >= maxDotProduct) {
             vertex = &(*vertices)[i];
             maxDotProduct = dotProduct;
@@ -51,21 +58,21 @@ glm::vec3 lineSegmentNormal(glm::vec3 v1, glm::vec3 v2) {
 
 glm::vec3 Simplex::simplexNormal() {
     glm::vec3 normal;
-    if (this->size == 0) {
+    if (size == 0) {
         normal = glm::vec3(1,0,0);
-    } else if (this->size == 1) {
-        normal = -1.0f * this->vertices[0];
-    } else if (this->size == 2) {
-        normal = lineSegmentNormal(this->vertices[0], this->vertices[1]);
+    } else if (size == 1) {
+        normal = -1.0f * vertices[0];
+    } else if (size == 2) {
+        normal = lineSegmentNormal(vertices[0], vertices[1]);
     } else {
         //determine closest side
         int maxDistIdx = 0;
         for (int i=0; i<3; i++) {
-            if (glm::length(this->vertices[i]) > glm::length(this->vertices[maxDistIdx])) {
+            if (glm::length(vertices[i]) > glm::length(vertices[maxDistIdx])) {
                 maxDistIdx = i;
             }
         }
-        normal = lineSegmentNormal(this->vertices[(maxDistIdx+1)%3], this->vertices[(maxDistIdx+2)%3]);
+        normal = lineSegmentNormal(vertices[(maxDistIdx+1)%3],vertices[(maxDistIdx+2)%3]);
     }
     return normal;
 }
@@ -74,8 +81,8 @@ void Simplex::addVertex(glm::vec3 vertex) {
     if (size < 3) {
         size++;
     }
-    this->vertices[this->head] = vertex;
-    this->head = (this->head +1)%3;
+    vertices[head] = vertex;
+    head = (head +1)%3;
 }
 
 bool Simplex::containsOrigin() {

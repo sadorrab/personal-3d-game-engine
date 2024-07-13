@@ -67,9 +67,9 @@ int main() {
         lastTime = currentTime;
         getInput(window, &targetDirection);
         const float speed = 3.0f;
-        triangle.transform += speed * deltaTime * triangle.orientation;
         if (abs(targetDirection.x) > 0.001f || abs(targetDirection.y) > 0.001f) {
             triangle.orientation = glm::normalize(targetDirection);
+            triangle.transform += speed * deltaTime * triangle.orientation;
         }
         if (isColliding(&triangle.verticesWorld, &hexagon.verticesWorld)) {
             hexagon.setColor(glm::vec3(0.2f, 0.6f, 0.7f));
@@ -78,7 +78,7 @@ int main() {
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        cameraTransform = triangle.transform;
+        cameraTransform = (0.9f * cameraTransform) + glm::vec2(0.1f * triangle.transform);
         camera = glm::mat4(
             glm::vec4(screenRatio*zoom, 0, 0, -1 * cameraTransform.x*zoom*screenRatio),
             glm::vec4(0, zoom, 0, -1 * cameraTransform.y*zoom),
