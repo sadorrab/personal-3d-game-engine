@@ -69,6 +69,7 @@ bool Simplex::originEnclosed() {
         glm::vec3 v2 = vertices[1];
         bool isCovector = abs((glm::dot(v1,v2)*glm::dot(v1,v2))-(glm::dot(v1,v1)*glm::dot(v2,v2))) < 0.0001f;
         if (isCovector) {
+            printf("covector 2\n");
             return true;
         }
     } else if (size == 3) {
@@ -78,6 +79,7 @@ bool Simplex::originEnclosed() {
             bool isCovector = abs((glm::dot(v1,v2)*glm::dot(v1,v2))-(glm::dot(v1,v1)*glm::dot(v2,v2))) < 0.0001f;
             //check for covectors
             if (isCovector) {
+                printf("covector 3\n");
                 return true;
             }
             glm::vec3 lastVector = vertices[(i+2)%3];
@@ -104,6 +106,7 @@ bool Simplex::originEnclosed() {
             }
         }
     }
+    printf("default\n");
     return true;
 }
 

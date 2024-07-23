@@ -10,10 +10,10 @@ bool loadOBJ(
 	const char* path,
 	std::vector <glm::vec3> &out_vetecies,
 	std::vector <glm::vec2> &out_uvs,
-	std::vector <glm::vec3> &out_normals
+	std::vector <glm::vec3> &out_normals,
+    std::vector <glm::vec3> &vertexList
 ) {
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndicies;
-	std::vector<glm::vec3> tmp_vertices;
 	std::vector<glm::vec2> tmp_uvs;
 	std::vector<glm::vec3> tmp_normals;
 
@@ -32,7 +32,7 @@ bool loadOBJ(
 		if (strcmp(lineHead, "v") == 0) {
 			glm::vec3 vertex;
 			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			tmp_vertices.push_back(vertex);
+			vertexList.push_back(vertex);
 		} else if (strcmp(lineHead, "vt") == 0) {
 			glm::vec2 uv;
 			fscanf(file, "%f %f\n", &uv.x, &uv.y);
@@ -58,7 +58,7 @@ bool loadOBJ(
 	} while(true);
 	for (int i=0; i<vertexIndices.size(); i++) {
 		unsigned int vertexIndex = vertexIndices[i];
-		glm::vec3 vertex = tmp_vertices[vertexIndex - 1];
+		glm::vec3 vertex = vertexList[vertexIndex - 1];
 		out_vetecies.push_back(vertex);
 	}
 	for (int i=0; i<uvIndices.size(); i++) {
